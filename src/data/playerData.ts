@@ -1,0 +1,48 @@
+import { Player } from '../types/player';
+
+export const mockPlayers: Player[] = [
+  {
+    id: "player-1",
+    name: "Mohit",
+    avatar: "avatar-1",
+    money: 1000,
+    position: 0,
+    isBankrupt: false,
+    isInJail: false,
+    jailTurns: 0,
+    getOutOfJailCards: 0,
+  },
+  {
+    id: "player-2",
+    name: "Riya",
+    avatar: "avatar-2",
+    money: 1000,
+    position: 0,
+    isBankrupt: false,
+    isInJail: false,
+    jailTurns: 0,
+    getOutOfJailCards: 0,
+  },
+  {
+    id: "player-3",
+    name: "Arjun",
+    avatar: "avatar-3",
+    money: 1000,
+    position: 0,
+    isBankrupt: false,
+    isInJail: false,
+    jailTurns: 0,
+    getOutOfJailCards: 0,
+  },
+  {
+    id: "player-4",
+    name: "Aarav",
+    avatar: "avatar-4",
+    money: 1000,
+    position: 0,
+    isBankrupt: false,
+    isInJail: false,
+    jailTurns: 0,
+    getOutOfJailCards: 0,
+  },
+];
