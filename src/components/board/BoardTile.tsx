@@ -8,6 +8,7 @@ export type TileOrientation = 'bottom' | 'left' | 'top' | 'right' | 'corner';
 interface BoardTileProps {
   tile: IBoardTile;
   property?: Property;
+  ownerColor?: string;
   width: number;
   height: number;
   orientation: TileOrientation;
@@ -21,11 +22,13 @@ const TILE_ICONS: Record<string, string> = {
   goto_jail: '🚔',
   event: '❓', // Chance/Chest
   transport: '🚂',
+  utility: '💡',
 };
 
 export const BoardTile: React.FC<BoardTileProps> = ({
   tile,
   property,
+  ownerColor,
   width,
   height,
   orientation,
@@ -63,6 +66,19 @@ export const BoardTile: React.FC<BoardTileProps> = ({
           ]}
         />
       )}
+      {/* Owner strip */}
+      {ownerColor && (
+        <View
+          style={[
+            styles.ownerStrip,
+            stripPosition === 'top' && { bottom: 0, left: 0, right: 0, height: 4 },
+            stripPosition === 'bottom' && { top: 0, left: 0, right: 0, height: 4 },
+            stripPosition === 'left' && { right: 0, top: 0, bottom: 0, width: 4 },
+            stripPosition === 'right' && { left: 0, top: 0, bottom: 0, width: 4 },
+            { backgroundColor: ownerColor },
+          ]}
+        />
+      )}
       {/* Content */}
       <View style={[styles.tileContent, 
         stripPosition === 'top' && { paddingTop: height * 0.25 },
@@ -94,6 +110,19 @@ export const BoardTile: React.FC<BoardTileProps> = ({
 
   const renderSpecialTile = () => (
     <View style={[styles.tileInner, styles.specialTile, { width, height }]}>
+      {/* Owner strip for special tiles (like transport/utility) */}
+      {ownerColor && (
+        <View
+          style={[
+            styles.ownerStrip,
+            stripPosition === 'top' && { bottom: 0, left: 0, right: 0, height: 4 },
+            stripPosition === 'bottom' && { top: 0, left: 0, right: 0, height: 4 },
+            stripPosition === 'left' && { right: 0, top: 0, bottom: 0, width: 4 },
+            stripPosition === 'right' && { left: 0, top: 0, bottom: 0, width: 4 },
+            { backgroundColor: ownerColor },
+          ]}
+        />
+      )}
       <View style={[
         styles.rotatedContent,
         isTopBottom && {
@@ -110,7 +139,11 @@ export const BoardTile: React.FC<BoardTileProps> = ({
             PAY ₹{tile.taxAmount}
           </Text>
         )}
-        {TILE_ICONS[tile.type] ? (
+        {tile.type === 'utility' ? (
+          <Text style={[styles.specialIcon, { fontSize: Math.max(12, Math.min(width, height) * 0.3) }]}>
+            {tile.name === 'WATER' ? '💧' : '💡'}
+          </Text>
+        ) : TILE_ICONS[tile.type] ? (
           <Text style={[styles.specialIcon, { fontSize: Math.max(12, Math.min(width, height) * 0.3) }]}>
             {TILE_ICONS[tile.type]}
           </Text>
@@ -166,6 +199,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
     borderWidth: 0.5,
     borderColor: '#333',
+  },
+  ownerStrip: {
+    position: 'absolute',
+    zIndex: 3,
   },
   tileContent: {
     flex: 1,

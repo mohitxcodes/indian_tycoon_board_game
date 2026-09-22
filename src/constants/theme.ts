@@ -14,6 +14,7 @@ export const theme = {
     border: "#E5E7EB", // subtle borders
     overlay: "rgba(0, 0, 0, 0.4)", // modal overlay
   },
+  playerColors: ['#EF4444', '#3B82F6', '#10B981', '#F59E0B'], // Red, Blue, Green, Amber
   spacing: {
     xs: 4,
     sm: 8,

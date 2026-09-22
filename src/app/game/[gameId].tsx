@@ -119,7 +119,8 @@ export default function GameScreen() {
   }
 
   const currentPlayer = game.players[game.currentPlayerIndex];
-  const isMyTurn = currentPlayer.id === 'player-1';
+  // For testing purposes, we allow the local user to control all 4 players
+  const isMyTurn = true; 
   const dice1 = game.lastDiceRoll ? game.lastDiceRoll[0] : 1;
   const dice2 = game.lastDiceRoll ? game.lastDiceRoll[1] : 1;
 
@@ -176,28 +177,39 @@ export default function GameScreen() {
         entering={SlideInDown.delay(300).duration(500).springify()}
         style={styles.bottomSection}
       >
-        {/* Dice display */}
-        <View style={styles.diceRow}>
-          <DiceFace value={dice1} size={52} isRolling={isRolling} />
-          <View style={{ width: 12 }} />
-          <DiceFace value={dice2} size={52} isRolling={isRolling} />
-        </View>
+        {/* Dice display - Now Pressable for rolling */}
+        <AnimatedPressable 
+          style={styles.diceRow}
+          onPress={(!hasRolled && isMyTurn) ? handleRollDice : undefined}
+          onPressIn={() => { if (!hasRolled && isMyTurn) rollBtnScale.value = withSpring(0.92); }}
+          onPressOut={() => { rollBtnScale.value = withSpring(1); }}
+          disabled={hasRolled || !isMyTurn || isRolling}
+        >
+          {/* Left Arrow */}
+          <View style={styles.diceArrowContainer}>
+            {!hasRolled && isMyTurn && <Text style={styles.diceArrow}>▶</Text>}
+          </View>
+          
+          <Animated.View style={[{ flexDirection: 'row' }, rollBtnAnimStyle]}>
+            <DiceFace value={dice1} size={52} isRolling={isRolling} />
+            <View style={{ width: 12 }} />
+            <DiceFace value={dice2} size={52} isRolling={isRolling} />
+            <Animated.View style={[styles.rollGlow, glowStyle]} pointerEvents="none" />
+          </Animated.View>
+
+          {/* Right Arrow */}
+          <View style={styles.diceArrowContainer}>
+            {!hasRolled && isMyTurn && <Text style={styles.diceArrow}>◀</Text>}
+          </View>
+        </AnimatedPressable>
 
         {/* Roll / End Turn / Buy buttons */}
         <View style={styles.ctaRow}>
-          {!hasRolled && isMyTurn && (
-            <AnimatedPressable
-              onPress={handleRollDice}
-              onPressIn={() => { rollBtnScale.value = withSpring(0.92); }}
-              onPressOut={() => { rollBtnScale.value = withSpring(1); }}
-              style={[styles.rollButton, rollBtnAnimStyle]}
-            >
-              <Animated.View style={[styles.rollGlow, glowStyle]} />
-              <Text style={styles.rollButtonText}>
-                {isRolling ? '🎲 Rolling...' : '🎲 Roll the Dice'}
-              </Text>
-            </AnimatedPressable>
-          )}
+          {!hasRolled && isMyTurn ? (
+            <Text style={styles.instructionText}>Roll the dice</Text>
+          ) : !isMyTurn ? (
+            <Text style={styles.waitingText}>⏳ {currentPlayer.name}'s turn...</Text>
+          ) : null}
 
           {/* Note: the old buy button is removed. It is now handled by the PropertyModal overlay */}
 
@@ -208,12 +220,6 @@ export default function GameScreen() {
             >
               <Text style={styles.endTurnText}>End Turn →</Text>
             </AnimatedPressable>
-          )}
-
-          {!isMyTurn && (
-            <View style={styles.waitingBadge}>
-              <Text style={styles.waitingText}>⏳ {currentPlayer.name}'s turn...</Text>
-            </View>
           )}
         </View>
 
@@ -312,32 +318,30 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
 
-  rollButton: {
-    backgroundColor: '#FF6B35',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#FF6B35',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+  diceArrowContainer: {
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  diceArrow: {
+    color: '#10B981', // green matching the screenshot
+    fontSize: 16,
+    fontWeight: '900',
+    textShadowColor: 'rgba(16, 185, 129, 0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
   },
   rollGlow: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 16,
+    top: -10, left: -10, right: -10, bottom: -10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 30,
   },
-  rollButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+  instructionText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 4,
   },
 
   buyButton: {

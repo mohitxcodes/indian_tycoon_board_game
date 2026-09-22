@@ -16,6 +16,7 @@ export type TileType =
   | "property"
   | "transport"
   | "tax"
+  | "utility"
   | "event"
   | "bonus"
   | "rest"

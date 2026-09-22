@@ -51,6 +51,7 @@ export const TileInfoModal: React.FC<TileInfoModalProps> = ({ property, onClose 
   const { width } = useWindowDimensions();
   const modalWidth = Math.min(width * 0.85, 340);
   const groupColor = GROUP_COLORS[property.group] ?? '#999';
+  const isSpecialGroup = property.group === 'Station' || property.group === 'Utility';
 
   return (
     <View style={styles.overlay}>
@@ -63,39 +64,81 @@ export const TileInfoModal: React.FC<TileInfoModalProps> = ({ property, onClose 
           {/* Inner cream content area */}
           <View style={styles.innerContent}>
             {/* Property Details Card */}
-            <View style={[styles.propertyCard, { borderColor: groupColor }]}>
-              <View style={[styles.cardHeader, { backgroundColor: groupColor }]}>
-                <Text style={styles.propertyName} numberOfLines={2}>{property.name}</Text>
+            <View style={[styles.propertyCard, { borderColor: isSpecialGroup ? '#CCC' : groupColor }]}>
+              <View style={[styles.cardHeader, { backgroundColor: isSpecialGroup ? '#FFF' : groupColor }]}>
+                <Text style={[styles.propertyName, isSpecialGroup && { color: '#000' }]} numberOfLines={2}>
+                  {property.name}
+                </Text>
               </View>
               <View style={styles.rentSection}>
-                <Text style={styles.rentTitle}>RENT ₹ {property.baseRent}</Text>
-                <Text style={styles.rentSubText}>Rent is doubled on owning all unimproved sites in the group.</Text>
+                {property.group === 'Station' ? (
+                  <>
+                    <Text style={styles.rentTitle}>RENT ₹ {property.baseRent}</Text>
+                    <View style={styles.rentDetailRow}>
+                      <Text style={styles.rentDetailIconText}>2 stations</Text>
+                      <Text style={styles.rentDetailValue}>₹ {property.baseRent * 2}</Text>
+                    </View>
+                    <View style={styles.rentDetailRow}>
+                      <Text style={styles.rentDetailIconText}>3 stations</Text>
+                      <Text style={styles.rentDetailValue}>₹ {property.baseRent * 4}</Text>
+                    </View>
+                    <View style={styles.rentDetailRow}>
+                      <Text style={styles.rentDetailIconText}>4 stations</Text>
+                      <Text style={styles.rentDetailValue}>₹ {property.baseRent * 8}</Text>
+                    </View>
+                    <View style={[styles.mortgageSection, { marginTop: 16 }]}>
+                      <Text style={styles.mortgageText}>Mortgage Value - ₹ {Math.floor(property.price / 2)}</Text>
+                    </View>
+                  </>
+                ) : property.group === 'Utility' ? (
+                  <>
+                    <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, alignItems: 'center' }}>
+                      <Text style={styles.utilityText}>
+                        If one "Utility" is owned, rent is 4 times amount shown on dice.
+                      </Text>
+                      <Text style={[styles.utilityText, { marginTop: 8 }]}>
+                        If both "Utilities" are owned, rent is 10 times amount shown on dice.
+                      </Text>
+                      <Text style={styles.utilityWatermarkIcon}>
+                        {property.name === 'Water Works' ? '💧' : '💡'}
+                      </Text>
+                    </View>
+                    <View style={[styles.mortgageSection, { marginTop: 16 }]}>
+                      <Text style={styles.mortgageText}>Mortgage Value - ₹ {Math.floor(property.price / 2)}</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.rentTitle}>RENT ₹ {property.baseRent}</Text>
+                    <Text style={styles.rentSubText}>Rent is doubled on owning all unimproved sites in the group.</Text>
 
-                <View style={styles.rentDetailRow}>
-                  <Text style={styles.rentDetailIconText}>🏠</Text>
-                  <Text style={styles.rentDetailValue}>₹ {property.baseRent * 5}</Text>
-                </View>
-                <View style={styles.rentDetailRow}>
-                  <Text style={styles.rentDetailIconText}>🏠🏠</Text>
-                  <Text style={styles.rentDetailValue}>₹ {property.baseRent * 15}</Text>
-                </View>
-                <View style={styles.rentDetailRow}>
-                  <Text style={styles.rentDetailIconText}>🏠🏠🏠</Text>
-                  <Text style={styles.rentDetailValue}>₹ {property.baseRent * 45}</Text>
-                </View>
-                <View style={styles.rentDetailRow}>
-                  <Text style={styles.rentDetailIconText}>🏠🏠🏠🏠</Text>
-                  <Text style={styles.rentDetailValue}>₹ {property.baseRent * 62}</Text>
-                </View>
-                <View style={styles.rentDetailRow}>
-                  <Text style={styles.rentDetailIconText}>🏨</Text>
-                  <Text style={styles.rentDetailValue}>₹ {property.baseRent * 75}</Text>
-                </View>
+                    <View style={styles.rentDetailRow}>
+                      <Text style={styles.rentDetailIconHouse}>🏠</Text>
+                      <Text style={styles.rentDetailValue}>₹ {property.baseRent * 5}</Text>
+                    </View>
+                    <View style={styles.rentDetailRow}>
+                      <Text style={styles.rentDetailIconHouse}>🏠🏠</Text>
+                      <Text style={styles.rentDetailValue}>₹ {property.baseRent * 15}</Text>
+                    </View>
+                    <View style={styles.rentDetailRow}>
+                      <Text style={styles.rentDetailIconHouse}>🏠🏠🏠</Text>
+                      <Text style={styles.rentDetailValue}>₹ {property.baseRent * 45}</Text>
+                    </View>
+                    <View style={styles.rentDetailRow}>
+                      <Text style={styles.rentDetailIconHouse}>🏠🏠🏠🏠</Text>
+                      <Text style={styles.rentDetailValue}>₹ {property.baseRent * 62}</Text>
+                    </View>
+                    <View style={styles.rentDetailRow}>
+                      <Text style={styles.rentDetailIconHouse}>🏨</Text>
+                      <Text style={styles.rentDetailValue}>₹ {property.baseRent * 75}</Text>
+                    </View>
 
-                <View style={styles.mortgageSection}>
-                  <Text style={styles.mortgageText}>Construction ₹ {property.upgradeCost} each</Text>
-                  <Text style={styles.mortgageText}>Mortgage Value ₹ {Math.floor(property.price / 2)}</Text>
-                </View>
+                    <View style={styles.mortgageSection}>
+                      <Text style={styles.mortgageText}>Construction ₹ {property.upgradeCost} each</Text>
+                      <Text style={styles.mortgageText}>Mortgage Value - ₹ {Math.floor(property.price / 2)}</Text>
+                    </View>
+                  </>
+                )}
               </View>
             </View>
 
@@ -219,11 +262,30 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    marginBottom: 3,
+    marginBottom: 5,
   },
   rentDetailIconText: {
     fontSize: 12,
+    fontWeight: '600',
+    color: '#444',
+  },
+  rentDetailIconHouse: {
+    fontSize: 12,
     letterSpacing: -2,
+  },
+  utilityText: {
+    fontSize: 11,
+    color: '#444',
+    textAlign: 'center',
+    fontWeight: '600',
+    lineHeight: 16,
+  },
+  utilityWatermarkIcon: {
+    fontSize: 48,
+    opacity: 0.1,
+    position: 'absolute',
+    alignSelf: 'center',
+    top: 20,
   },
   rentDetailValue: {
     fontSize: 12,

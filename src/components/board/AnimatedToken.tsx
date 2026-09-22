@@ -9,8 +9,8 @@ import Animated, {
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
-import { FontAwesome5 } from '@expo/vector-icons';
 import { TOTAL_TILES, TILES_PER_SIDE } from '../../data/boardData';
+import { PawnIcon } from './PawnIcon';
 
 interface AnimatedTokenProps {
   position: number;        // Current tile index (0-39)
@@ -189,21 +189,15 @@ export const AnimatedToken: React.FC<AnimatedTokenProps> = ({
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: translateX.value - 12 }, // center the 24px icon
-      { translateY: translateY.value - 20 }, // offset so pawn base is on the tile center
+      { translateX: translateX.value - 15 }, // center the 30px icon width
+      { translateY: translateY.value - 35 }, // offset so pawn base is at the tile center (height is 45)
       { scaleY: scaleY.value },
     ],
   }));
 
   return (
     <Animated.View style={[styles.tokenContainer, animatedStyle]}>
-      <FontAwesome5
-        name="chess-pawn"
-        solid
-        size={22}
-        color={color}
-        style={styles.pawnIcon}
-      />
+      <PawnIcon color={color} size={30} />
     </Animated.View>
   );
 };
@@ -218,10 +212,5 @@ const styles = StyleSheet.create({
     zIndex: 100,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  pawnIcon: {
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 1, height: 3 },
-    textShadowRadius: 3,
   },
 });

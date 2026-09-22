@@ -10,6 +10,8 @@ export const GROUP_COLORS: Record<string, string> = {
   'Yellow': '#FFFF00',
   'Green': '#008000',
   'Dark Blue': '#00008B',
+  'Station': '#000000',
+  'Utility': '#666666',
 };
 
 // ─── Properties ───────────────────
@@ -51,6 +53,16 @@ export const mockProperties: Record<string, Property> = {
   // Dark Blue
   "p21": { id: "p21", name: "Delhi", group: "Dark Blue", price: 350, baseRent: 35, upgradeCost: 200, level: 0, isMortgaged: false },
   "p22": { id: "p22", name: "Mumbai", group: "Dark Blue", price: 400, baseRent: 50, upgradeCost: 200, level: 0, isMortgaged: false },
+
+  // Stations
+  "p23": { id: "p23", name: "Chhatrapati Shivaji Terminus", group: "Station", price: 200, baseRent: 25, upgradeCost: 0, level: 0, isMortgaged: false },
+  "p24": { id: "p24", name: "Howrah Station", group: "Station", price: 200, baseRent: 25, upgradeCost: 0, level: 0, isMortgaged: false },
+  "p25": { id: "p25", name: "New Delhi Railway Station", group: "Station", price: 200, baseRent: 25, upgradeCost: 0, level: 0, isMortgaged: false },
+  "p26": { id: "p26", name: "Chennai Central", group: "Station", price: 200, baseRent: 25, upgradeCost: 0, level: 0, isMortgaged: false },
+
+  // Utilities
+  "p27": { id: "p27", name: "Electric Company", group: "Utility", price: 150, baseRent: 0, upgradeCost: 0, level: 0, isMortgaged: false },
+  "p28": { id: "p28", name: "Water Works", group: "Utility", price: 150, baseRent: 0, upgradeCost: 0, level: 0, isMortgaged: false },
 };
 
 export const TILES_PER_SIDE = 11;
@@ -63,7 +75,7 @@ export const mockBoard: BoardTile[] = [
   { id: "t2",  name: "CHEST", type: "event", position: 2 },
   { id: "t3",  name: "Bhubaneswar", type: "property", position: 3, propertyId: "p2" },
   { id: "t4",  name: "INCOME TAX", type: "tax", position: 4, taxAmount: 200 },
-  { id: "t5",  name: "STATION", type: "transport", position: 5 },
+  { id: "t5",  name: "STATION", type: "transport", position: 5, propertyId: "p23" },
   { id: "t6",  name: "Panaji", type: "property", position: 6, propertyId: "p3" },
   { id: "t7",  name: "CHANCE", type: "event", position: 7 },
   { id: "t8",  name: "Agra", type: "property", position: 8, propertyId: "p4" },
@@ -72,10 +84,10 @@ export const mockBoard: BoardTile[] = [
 
   // ── Left column: bottom→top (11-19) ───
   { id: "t11", name: "Ludhiana", type: "property", position: 11, propertyId: "p6" },
-  { id: "t12", name: "ELECTRIC", type: "tax", position: 12, taxAmount: 150 },
+  { id: "t12", name: "ELECTRIC", type: "utility", position: 12, propertyId: "p27" },
   { id: "t13", name: "Patna", type: "property", position: 13, propertyId: "p7" },
   { id: "t14", name: "Bhopal", type: "property", position: 14, propertyId: "p8" },
-  { id: "t15", name: "STATION", type: "transport", position: 15 },
+  { id: "t15", name: "STATION", type: "transport", position: 15, propertyId: "p24" },
   { id: "t16", name: "Indore", type: "property", position: 16, propertyId: "p9" },
   { id: "t17", name: "CHEST", type: "event", position: 17 },
   { id: "t18", name: "Nagpur", type: "property", position: 18, propertyId: "p10" },
@@ -87,10 +99,10 @@ export const mockBoard: BoardTile[] = [
   { id: "t22", name: "CHANCE", type: "event", position: 22 },
   { id: "t23", name: "Chandigarh", type: "property", position: 23, propertyId: "p13" },
   { id: "t24", name: "Jaipur", type: "property", position: 24, propertyId: "p14" },
-  { id: "t25", name: "STATION", type: "transport", position: 25 },
+  { id: "t25", name: "STATION", type: "transport", position: 25, propertyId: "p25" },
   { id: "t26", name: "Pune", type: "property", position: 26, propertyId: "p15" },
   { id: "t27", name: "Hyderabad", type: "property", position: 27, propertyId: "p16" },
-  { id: "t28", name: "WATER", type: "tax", position: 28, taxAmount: 150 },
+  { id: "t28", name: "WATER", type: "utility", position: 28, propertyId: "p28" },
   { id: "t29", name: "Ahmedabad", type: "property", position: 29, propertyId: "p17" },
   { id: "t30", name: "GO TO JAIL", type: "goto_jail", position: 30 },
 
@@ -99,7 +111,7 @@ export const mockBoard: BoardTile[] = [
   { id: "t32", name: "Chennai", type: "property", position: 32, propertyId: "p19" },
   { id: "t33", name: "CHEST", type: "event", position: 33 },
   { id: "t34", name: "Bengaluru", type: "property", position: 34, propertyId: "p20" },
-  { id: "t35", name: "STATION", type: "transport", position: 35 },
+  { id: "t35", name: "STATION", type: "transport", position: 35, propertyId: "p26" },
   { id: "t36", name: "CHANCE", type: "event", position: 36 },
   { id: "t37", name: "Delhi", type: "property", position: 37, propertyId: "p21" },
   { id: "t38", name: "SUPER TAX", type: "tax", position: 38, taxAmount: 100 },

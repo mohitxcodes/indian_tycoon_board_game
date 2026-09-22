@@ -5,6 +5,7 @@ import { Player } from '../../types/player';
 import { BoardTile } from './BoardTile';
 import { TokenOverlay } from './TokenOverlay';
 import { TILES_PER_SIDE } from '../../data/boardData';
+import { theme } from '../../constants/theme';
 
 interface GameBoardProps {
   boardData: IBoardTile[];
@@ -45,6 +46,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const topRow    = boardData.slice(20, 31);
   const rightCol  = boardData.slice(31, 40);
 
+  const getOwnerColor = (propertyId?: string) => {
+    if (!propertyId) return undefined;
+    const prop = properties[propertyId];
+    if (!prop || !prop.ownerId) return undefined;
+    const ownerIndex = players.findIndex(p => p.id === prop.ownerId);
+    return ownerIndex !== -1 ? theme.playerColors[ownerIndex % theme.playerColors.length] : undefined;
+  };
+
   return (
     <View style={[styles.board, { width: boardSize, height: boardSize }]}>
       {/* ── TOP ROW (Left to Right) ── */}
@@ -56,6 +65,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               key={tile.id}
               tile={tile}
               property={tile.propertyId ? properties[tile.propertyId] : undefined}
+              ownerColor={getOwnerColor(tile.propertyId)}
               width={isCorner ? cornerSize : sideTileLength}
               height={cornerSize}
               orientation={isCorner ? 'corner' : 'top'}
@@ -76,6 +86,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               key={tile.id}
               tile={tile}
               property={tile.propertyId ? properties[tile.propertyId] : undefined}
+              ownerColor={getOwnerColor(tile.propertyId)}
               width={cornerSize}
               height={sideTileLength}
               orientation="left"
@@ -125,6 +136,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               key={tile.id}
               tile={tile}
               property={tile.propertyId ? properties[tile.propertyId] : undefined}
+              ownerColor={getOwnerColor(tile.propertyId)}
               width={cornerSize}
               height={sideTileLength}
               orientation="right"
@@ -145,6 +157,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               key={tile.id}
               tile={tile}
               property={tile.propertyId ? properties[tile.propertyId] : undefined}
+              ownerColor={getOwnerColor(tile.propertyId)}
               width={isCorner ? cornerSize : sideTileLength}
               height={cornerSize}
               orientation={isCorner ? 'corner' : 'bottom'}
