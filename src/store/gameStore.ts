@@ -11,6 +11,9 @@ interface GameStore {
   rollDice: () => void;
   buyProperty: (propertyId: string) => void;
   endTurn: () => void;
+  startAuction: (propertyId: string) => void;
+  placeBid: (playerId: string, amount: number) => void;
+  withdrawAuction: (playerId: string) => void;
 }
 
 const getInitialState = (): GameState => ({
@@ -61,5 +64,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const newState = Engine.endTurn(game);
     set({ game: newState });
-  }
+  },
+
+  startAuction: (propertyId: string) => {
+    const { game } = get();
+    if (!game) return;
+    set({ game: Engine.startAuction(game, propertyId) });
+  },
+
+  placeBid: (playerId: string, amount: number) => {
+    const { game } = get();
+    if (!game) return;
+    set({ game: Engine.placeBid(game, playerId, amount) });
+  },
+
+  withdrawAuction: (playerId: string) => {
+    const { game } = get();
+    if (!game) return;
+    set({ game: Engine.withdrawAuction(game, playerId) });
+  },
 }));

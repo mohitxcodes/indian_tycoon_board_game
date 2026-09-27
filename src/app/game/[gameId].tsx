@@ -28,7 +28,10 @@ import { PlayerHud } from '../../components/player/PlayerHud';
 import { ActionBar } from '../../components/board/ActionBar';
 import { PropertyModal } from '../../components/board/PropertyModal';
 import { TileInfoModal } from '../../components/board/TileInfoModal';
+import { PaymentModal } from '../../components/board/PaymentModal';
+import { AuctionModal } from '../../components/board/AuctionModal';
 import { useGameStore } from '../../store/gameStore';
+import { PaymentEvent } from '../../types/game';
 import { theme } from '../../constants/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -43,12 +46,16 @@ export default function GameScreen() {
   const rollDiceAction = useGameStore((s) => s.rollDice);
   const buyPropertyAction = useGameStore((s) => s.buyProperty);
   const endTurnAction = useGameStore((s) => s.endTurn);
+  const startAuctionAction = useGameStore((s) => s.startAuction);
+  const placeBidAction = useGameStore((s) => s.placeBid);
+  const withdrawAuctionAction = useGameStore((s) => s.withdrawAuction);
 
   const [isRolling, setIsRolling] = useState(false);
   const [hasRolled, setHasRolled] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [declinedPropertyId, setDeclinedPropertyId] = useState<string | null>(null);
   const [inspectedPropertyId, setInspectedPropertyId] = useState<string | null>(null);
+  const [activePayment, setActivePayment] = useState<PaymentEvent | null>(null);
 
   // Dice glow animation
   const diceGlow = useSharedValue(0);
@@ -59,6 +66,13 @@ export default function GameScreen() {
       initGame();
     }
   }, [game, initGame]);
+
+  // Show payment modal when a new payment event happens
+  useEffect(() => {
+    if (game?.lastPayment) {
+      setActivePayment(game.lastPayment);
+    }
+  }, [game?.lastPayment]);
 
   // Pulse the roll button when it's your turn
   useEffect(() => {
@@ -128,8 +142,8 @@ export default function GameScreen() {
   const currentTile = game.board[currentPlayer.position];
   const currentProperty = currentTile?.propertyId ? game.properties[currentTile.propertyId] : undefined;
   
-  // They can buy if they rolled, it's their turn, property is unowned, they can afford it, and they haven't declined it yet
-  const canBuy = hasRolled && !isAnimating && isMyTurn && currentProperty && !currentProperty.ownerId && currentPlayer.money >= currentProperty.price;
+  // They can buy if they rolled, it's their turn, property is unowned, they can afford it, and they haven't declined it yet, and no active auction
+  const canBuy = hasRolled && !isAnimating && isMyTurn && currentProperty && !currentProperty.ownerId && currentPlayer.money >= currentProperty.price && game.status !== 'auction';
   const showPropertyModal = canBuy && declinedPropertyId !== currentProperty?.id;
 
   return (
@@ -140,6 +154,15 @@ export default function GameScreen() {
       <Animated.View entering={FadeInDown.delay(200).duration(400)}>
         <View style={styles.topSafeArea} />
         <PlayerHud players={game.players} currentPlayerIndex={game.currentPlayerIndex} />
+        
+        {/* Top Event Feed Log */}
+        {game.eventFeed.length > 0 && (
+          <View style={styles.topEventFeed}>
+            <Text style={styles.topEventText} numberOfLines={1}>
+              📢 {game.eventFeed[0]}
+            </Text>
+          </View>
+        )}
       </Animated.View>
 
       {/* ── Board ─────────────────────────────────── */}
@@ -223,14 +246,6 @@ export default function GameScreen() {
           )}
         </View>
 
-        {/* Event feed */}
-        {game.eventFeed.length > 0 && (
-          <View style={styles.eventFeed}>
-            <Text style={styles.eventText} numberOfLines={1}>
-              📢 {game.eventFeed[0]}
-            </Text>
-          </View>
-        )}
       </Animated.View>
 
       {/* ── Overlay Modals ──────────────────────── */}
@@ -242,8 +257,25 @@ export default function GameScreen() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }}
           onAuction={() => {
-            // For now, Auction just skips buying the property
+            startAuctionAction(currentProperty.id);
             setDeclinedPropertyId(currentProperty.id);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }}
+        />
+      )}
+
+      {/* ── Auction Modal ── */}
+      {game.status === 'auction' && game.auction && (
+        <AuctionModal
+          auction={game.auction}
+          players={game.players}
+          property={game.properties[game.auction.propertyId]}
+          onBid={(playerId, amount) => {
+            placeBidAction(playerId, amount);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }}
+          onWithdraw={(playerId) => {
+            withdrawAuctionAction(playerId);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           }}
         />
@@ -257,6 +289,16 @@ export default function GameScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setInspectedPropertyId(null);
           }}
+        />
+      )}
+
+      {/* ── Payment / Rent Modal ── */}
+      {activePayment && (
+        <PaymentModal
+          fromPlayer={game.players.find(p => p.id === activePayment.fromId)!}
+          toPlayer={game.players.find(p => p.id === activePayment.toId)!}
+          amount={activePayment.amount}
+          onComplete={() => setActivePayment(null)}
         />
       )}
     </View>
@@ -387,14 +429,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  eventFeed: {
-    marginTop: 6,
-    paddingHorizontal: 20,
+  topEventFeed: {
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  eventText: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
-    fontWeight: '500',
+  topEventText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

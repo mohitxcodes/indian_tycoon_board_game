@@ -19,38 +19,7 @@ interface PropertyModalProps {
   onAuction: () => void;
 }
 
-const Button3D: React.FC<{
-  title: string;
-  color: string;
-  shadowColor: string;
-  onPress: () => void;
-}> = ({ title, color, shadowColor, onPress }) => {
-  const scale = useSharedValue(1);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <AnimatedPressable
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        onPress();
-      }}
-      onPressIn={() => {
-        scale.value = withSpring(0.95);
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1);
-      }}
-      style={[styles.buttonContainer, { backgroundColor: shadowColor }, animStyle]}
-    >
-      <View style={[styles.buttonInner, { backgroundColor: color }]}>
-        <Text style={styles.buttonText}>{title}</Text>
-      </View>
-    </AnimatedPressable>
-  );
-};
+import { Button3D } from '../ui/Button3D';
 
 export const PropertyModal: React.FC<PropertyModalProps> = ({ property, onBuy, onAuction }) => {
   const { width } = useWindowDimensions();
@@ -296,26 +265,4 @@ const styles = StyleSheet.create({
     gap: 8, // Compact gap between buttons
   },
   
-  // 3D Buttons
-  buttonContainer: {
-    borderRadius: 6,
-    paddingBottom: 4, // 3D depth
-    width: '100%',
-  },
-  buttonInner: {
-    borderRadius: 6,
-    paddingVertical: 8, // Compact button
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 13,
-    fontWeight: '900',
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
-    letterSpacing: 1,
-  },
 });
