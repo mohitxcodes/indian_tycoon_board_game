@@ -32,6 +32,7 @@ import { PropertyModal } from '../../components/board/PropertyModal';
 import { TileInfoModal } from '../../components/board/TileInfoModal';
 import { PaymentModal } from '../../components/board/PaymentModal';
 import { AuctionModal } from '../../components/board/AuctionModal';
+import { JailModal } from '../../components/board/JailModal';
 import { GlobalEventPopup } from '../../components/board/GlobalEventPopup';
 import { useGameStore } from '../../store/gameStore';
 import { PaymentEvent } from '../../types/game';
@@ -52,6 +53,8 @@ export default function GameScreen() {
   const startAuctionAction = useGameStore((s) => s.startAuction);
   const placeBidAction = useGameStore((s) => s.placeBid);
   const withdrawAuctionAction = useGameStore((s) => s.withdrawAuction);
+  const rollForJailAction = useGameStore((s) => s.rollForJail);
+  const payJailFineAction = useGameStore((s) => s.payJailFine);
 
   const [isRolling, setIsRolling] = useState(false);
   const [hasRolled, setHasRolled] = useState(false);
@@ -61,6 +64,8 @@ export default function GameScreen() {
   const [declinedPropertyId, setDeclinedPropertyId] = useState<string | null>(null);
   const [inspectedPropertyId, setInspectedPropertyId] = useState<string | null>(null);
   const [activePayment, setActivePayment] = useState<PaymentEvent | null>(null);
+  const [showJailModal, setShowJailModal] = useState(false);
+  const [jailActionTaken, setJailActionTaken] = useState(false);
 
   // Dice glow animation
   const diceGlow = useSharedValue(0);
@@ -130,6 +135,8 @@ export default function GameScreen() {
     endTurnAction();
     setHasRolled(false);
     setDeclinedPropertyId(null);
+    setShowJailModal(false);
+    setJailActionTaken(false);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, [endTurnAction]);
 
@@ -156,6 +163,10 @@ export default function GameScreen() {
   // They can buy if they rolled, it's their turn, property is unowned, they can afford it, and they haven't declined it yet, and no active auction
   const canBuy = hasRolled && !isAnimating && isMyTurn && currentProperty && !currentProperty.ownerId && currentPlayer.money >= currentProperty.price && game.status !== 'auction';
   const showPropertyModal = canBuy && declinedPropertyId !== currentProperty?.id;
+
+  // Jail detection: show jail modal at the start of a jailed player's turn
+  const isPlayerInJail = currentPlayer.isInJail;
+  const shouldShowJailModal = isPlayerInJail && !hasRolled && !jailActionTaken;
 
   return (
     <View style={styles.screen}>
@@ -219,10 +230,10 @@ export default function GameScreen() {
         {/* Dice display - Now Pressable for rolling */}
         <AnimatedPressable 
           style={styles.diceRow}
-          onPress={(!hasRolled && isMyTurn) ? handleRollDice : undefined}
-          onPressIn={() => { if (!hasRolled && isMyTurn) rollBtnScale.value = withSpring(0.92); }}
+          onPress={(!hasRolled && isMyTurn && !isPlayerInJail) ? handleRollDice : undefined}
+          onPressIn={() => { if (!hasRolled && isMyTurn && !isPlayerInJail) rollBtnScale.value = withSpring(0.92); }}
           onPressOut={() => { rollBtnScale.value = withSpring(1); }}
-          disabled={hasRolled || !isMyTurn || isRolling}
+          disabled={hasRolled || !isMyTurn || isRolling || isPlayerInJail}
         >
           {/* Left Arrow */}
           <View style={styles.diceArrowContainer}>
@@ -244,8 +255,10 @@ export default function GameScreen() {
 
         {/* Roll / End Turn / Buy buttons */}
         <View style={styles.ctaRow}>
-          {!hasRolled && isMyTurn ? (
+          {!hasRolled && isMyTurn && !isPlayerInJail ? (
             <Text style={styles.instructionText}>Roll the dice</Text>
+          ) : !hasRolled && isPlayerInJail && !jailActionTaken ? (
+            <Text style={styles.instructionText}>🔒 You are in Jail!</Text>
           ) : !isMyTurn ? (
             <Text style={styles.waitingText}>⏳ {currentPlayer.name}'s turn...</Text>
           ) : null}
@@ -360,6 +373,28 @@ export default function GameScreen() {
           toPlayer={game.players.find(p => p.id === activePayment.toId)!}
           amount={activePayment.amount}
           onComplete={() => setActivePayment(null)}
+        />
+      )}
+
+      {/* ── Jail Modal ── */}
+      {shouldShowJailModal && (
+        <JailModal
+          player={currentPlayer}
+          onRollForFreedom={() => {
+            rollForJailAction();
+            setJailActionTaken(true);
+            // If player escaped jail (no longer in jail), they already moved via engine
+            // If still in jail, they just wasted a turn
+            setHasRolled(true);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          }}
+          onPayFine={() => {
+            payJailFineAction();
+            setJailActionTaken(true);
+            // Player paid fine, they're free but haven't rolled yet for movement
+            // They can now roll the dice normally
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }}
         />
       )}
     </View>
