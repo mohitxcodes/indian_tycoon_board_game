@@ -137,36 +137,52 @@ export const AnimatedToken: React.FC<AnimatedTokenProps> = ({
     const to = position;
     if (from === to) return;
 
-    // Calculate steps going forward (handles wrapping past GO)
-    let steps = to - from;
-    if (steps < 0) steps += TOTAL_TILES; // Wrap around
+    // Detect direction: going forward (normal move) vs backward (jail slide)
+    let forwardSteps = to - from;
+    if (forwardSteps < 0) forwardSteps += TOTAL_TILES;
+    
+    let backwardSteps = from - to;
+    if (backwardSteps < 0) backwardSteps += TOTAL_TILES;
 
-    const STEP_DURATION = 180; // ms per tile hop
-    const BOUNCE_DURATION = 80;
+    // Use backward animation if it's shorter, or if it's explicitly the Go To Jail slide (30 -> 10)
+    const goBackward = backwardSteps < forwardSteps || (from === 30 && to === 10);
+    const totalSteps = goBackward ? backwardSteps : forwardSteps;
+
+    const STEP_DURATION = goBackward ? 40 : 180; // Fast smooth slide for backward
+    const BOUNCE_DURATION = goBackward ? 0 : 80;
 
     // Build a chain: move to each intermediate tile one by one
     const animateStep = (step: number) => {
-      const intermediatePos = (from + step) % TOTAL_TILES;
+      let intermediatePos: number;
+      if (goBackward) {
+        intermediatePos = ((from - step) % TOTAL_TILES + TOTAL_TILES) % TOTAL_TILES;
+      } else {
+        intermediatePos = (from + step) % TOTAL_TILES;
+      }
       const { x, y } = getTileCenter(intermediatePos, boardSize, cornerSize, sideTileLength, playerIndex);
-      const isLastStep = step === steps;
+      const isLastStep = step === totalSteps;
 
       translateX.value = withTiming(x, {
         duration: STEP_DURATION,
-        easing: Easing.out(Easing.quad),
+        easing: goBackward ? Easing.linear : Easing.out(Easing.quad),
       });
 
       translateY.value = withTiming(y, {
         duration: STEP_DURATION,
-        easing: Easing.out(Easing.quad),
+        easing: goBackward ? Easing.linear : Easing.out(Easing.quad),
       });
 
-      // Bounce: squash on landing, then spring back
-      scaleY.value = withSequence(
-        withTiming(1, { duration: STEP_DURATION * 0.6 }), // Moving phase
-        withTiming(0.7, { duration: BOUNCE_DURATION, easing: Easing.out(Easing.quad) }), // Squash
-        withTiming(1.15, { duration: BOUNCE_DURATION, easing: Easing.out(Easing.quad) }), // Stretch
-        withTiming(1, { duration: BOUNCE_DURATION, easing: Easing.inOut(Easing.ease) }), // Settle
-      );
+      if (!goBackward) {
+        // Bounce: squash on landing, then spring back
+        scaleY.value = withSequence(
+          withTiming(1, { duration: STEP_DURATION * 0.6 }), // Moving phase
+          withTiming(0.7, { duration: BOUNCE_DURATION, easing: Easing.out(Easing.quad) }), // Squash
+          withTiming(1.15, { duration: BOUNCE_DURATION, easing: Easing.out(Easing.quad) }), // Stretch
+          withTiming(1, { duration: BOUNCE_DURATION, easing: Easing.inOut(Easing.ease) }), // Settle
+        );
+      } else {
+        scaleY.value = 1; // Flat smooth slide
+      }
 
       if (!isLastStep) {
         setTimeout(() => {

@@ -55,6 +55,7 @@ export default function GameScreen() {
   const withdrawAuctionAction = useGameStore((s) => s.withdrawAuction);
   const rollForJailAction = useGameStore((s) => s.rollForJail);
   const payJailFineAction = useGameStore((s) => s.payJailFine);
+  const sendToJailAction = useGameStore((s) => s.sendToJail);
 
   const [isRolling, setIsRolling] = useState(false);
   const [hasRolled, setHasRolled] = useState(false);
@@ -83,6 +84,19 @@ export default function GameScreen() {
       setActivePayment(game.lastPayment);
     }
   }, [game?.lastPayment]);
+
+  // Two-phase Go-to-Jail: after landing on position 30, slide back to jail
+  useEffect(() => {
+    if (game?.pendingJail && !isAnimating) {
+      // Player has landed on "Go to Jail" and the walk animation finished.
+      // Wait a beat, then dispatch sendToJail to move them to position 10.
+      const timer = setTimeout(() => {
+        sendToJailAction();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [game?.pendingJail, isAnimating, sendToJailAction]);
 
   // Pulse the roll button when it's your turn
   useEffect(() => {

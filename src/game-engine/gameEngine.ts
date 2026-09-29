@@ -36,13 +36,12 @@ export const movePlayer = (state: GameState, playerId: string, steps: number): G
   }
 
   // ── Go To Jail ─────────────────────────────────
+  // Don't move to jail immediately — let the UI animate landing on "Go to Jail" first
   if (tile.type === 'goto_jail') {
-    player.position = 10; // Jail tile position
-    player.isInJail = true;
-    player.jailTurns = 0;
+    newState.pendingJail = true;
     newState.players[playerIndex] = player;
-    newState.eventFeed = [`${player.name} was sent to JAIL! 🚔`, ...newState.eventFeed];
-    return newState; // Skip rent check — they're in jail
+    newState.eventFeed = [`${player.name} landed on GO TO JAIL! 🚔`, ...newState.eventFeed];
+    return newState; // Skip rent check
   }
 
   // ── Property Rent ──────────────────────────────
@@ -127,6 +126,21 @@ export const payJailFine = (state: GameState, playerId: string): GameState => {
   player.jailTurns = 0;
   newState.players[playerIndex] = player;
   newState.eventFeed = [`${player.name} paid ₹75 fine to leave JAIL 💰`, ...newState.eventFeed];
+  return newState;
+};
+
+// ── Send player to jail (second step of Go-to-Jail animation) ──
+export const sendToJail = (state: GameState, playerId: string): GameState => {
+  const newState = { ...state, players: [...state.players], pendingJail: false };
+  const playerIndex = newState.players.findIndex(p => p.id === playerId);
+  if (playerIndex === -1) return state;
+
+  const player = { ...newState.players[playerIndex] };
+  player.position = 10; // Jail tile position
+  player.isInJail = true;
+  player.jailTurns = 0;
+  newState.players[playerIndex] = player;
+  newState.eventFeed = [`${player.name} is now IN JAIL! 🔒`, ...newState.eventFeed];
   return newState;
 };
 

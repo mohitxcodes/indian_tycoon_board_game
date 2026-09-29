@@ -34,4 +34,5 @@ export interface GameState {
   winnerId?: string;
   lastPayment?: PaymentEvent;
   auction?: AuctionState;
+  pendingJail?: boolean; // True when player landed on "Go to Jail" but hasn't been moved to jail yet
 }
