@@ -32,6 +32,7 @@ import { PropertyModal } from '../../components/board/PropertyModal';
 import { TileInfoModal } from '../../components/board/TileInfoModal';
 import { PaymentModal } from '../../components/board/PaymentModal';
 import { AuctionModal } from '../../components/board/AuctionModal';
+import { GlobalEventPopup } from '../../components/board/GlobalEventPopup';
 import { useGameStore } from '../../store/gameStore';
 import { PaymentEvent } from '../../types/game';
 import { theme } from '../../constants/theme';
@@ -191,6 +192,11 @@ export default function GameScreen() {
             setInspectedPropertyId(propertyId);
           }}
         />
+        
+        {/* Central Event Popup */}
+        {game.eventFeed.length > 0 && (
+          <GlobalEventPopup latestEvent={game.eventFeed[0]} />
+        )}
       </Animated.View>
 
       {/* ── Action Bar ────────────────────────────── */}

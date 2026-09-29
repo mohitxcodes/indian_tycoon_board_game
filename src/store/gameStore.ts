@@ -14,6 +14,8 @@ interface GameStore {
   startAuction: (propertyId: string) => void;
   placeBid: (playerId: string, amount: number) => void;
   withdrawAuction: (playerId: string) => void;
+  rollForJail: () => void;
+  payJailFine: () => void;
 }
 
 const getInitialState = (): GameState => ({
@@ -89,5 +91,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { game } = get();
     if (!game) return;
     set({ game: Engine.withdrawAuction(game, playerId) });
+  },
+
+  rollForJail: () => {
+    const { game } = get();
+    if (!game) return;
+    const currentPlayer = game.players[game.currentPlayerIndex];
+    set({ game: Engine.rollForJail(game, currentPlayer.id) });
+  },
+
+  payJailFine: () => {
+    const { game } = get();
+    if (!game) return;
+    const currentPlayer = game.players[game.currentPlayerIndex];
+    set({ game: Engine.payJailFine(game, currentPlayer.id) });
   },
 }));

@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text, useWindowDimensions, Image } from 'react-native';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import { useEffect, useRef, useState } from 'react';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Player } from '../../types/player';
 
@@ -28,6 +30,25 @@ const PlayerCard: React.FC<{
   const style = PLAYER_STYLES[index % PLAYER_STYLES.length];
   const avatarUrl = getAvatarUrl(player.name);
 
+  const prevMoneyRef = useRef(player.money);
+  const [moneyDiff, setMoneyDiff] = useState<number | null>(null);
+  const [diffKey, setDiffKey] = useState(0);
+
+  useEffect(() => {
+    if (player.money !== prevMoneyRef.current) {
+      const diff = player.money - prevMoneyRef.current;
+      prevMoneyRef.current = player.money;
+      
+      setMoneyDiff(diff);
+      setDiffKey(prev => prev + 1);
+
+      const timer = setTimeout(() => {
+        setMoneyDiff(null);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [player.money]);
+
   return (
     <View style={[
       styles.card3dBase,
@@ -55,6 +76,20 @@ const PlayerCard: React.FC<{
           <View style={styles.moneyRow}>
             <FontAwesome5 name="money-bill-wave" size={11} color="#10B981" style={{ marginRight: 4 }} />
             <Text style={styles.moneyText}>₹ {player.money.toLocaleString('en-IN')}</Text>
+            
+            {moneyDiff !== null && (
+              <Animated.Text
+                key={diffKey}
+                entering={FadeInDown.duration(400).springify()}
+                exiting={FadeOutUp.duration(300)}
+                style={[
+                  styles.floatingDiff,
+                  { color: moneyDiff > 0 ? '#10B981' : '#EF4444' }
+                ]}
+              >
+                {moneyDiff > 0 ? '+' : '-'}₹{Math.abs(moneyDiff)}
+              </Animated.Text>
+            )}
           </View>
         </View>
       </View>
@@ -150,5 +185,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     color: '#1E293B',
+  },
+  floatingDiff: {
+    position: 'absolute',
+    right: -2,
+    top: -18,
+    fontSize: 14,
+    fontWeight: '900',
+    textShadowColor: 'rgba(255,255,255,0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+    zIndex: 10,
   },
 });

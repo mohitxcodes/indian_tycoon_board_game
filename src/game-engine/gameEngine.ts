@@ -25,8 +25,27 @@ export const movePlayer = (state: GameState, playerId: string, steps: number): G
 
   newState.players[playerIndex] = player;
 
-  // Check for property rent
+  // Check the tile the player landed on
   const tile = state.board[player.position];
+
+  // ── Tax Tiles ──────────────────────────────────
+  if (tile.type === 'tax' && tile.taxAmount) {
+    player.money -= tile.taxAmount;
+    newState.players[playerIndex] = player;
+    newState.eventFeed = [`${player.name} paid ₹${tile.taxAmount} ${tile.name}`, ...newState.eventFeed];
+  }
+
+  // ── Go To Jail ─────────────────────────────────
+  if (tile.type === 'goto_jail') {
+    player.position = 10; // Jail tile position
+    player.isInJail = true;
+    player.jailTurns = 0;
+    newState.players[playerIndex] = player;
+    newState.eventFeed = [`${player.name} was sent to JAIL! 🚔`, ...newState.eventFeed];
+    return newState; // Skip rent check — they're in jail
+  }
+
+  // ── Property Rent ──────────────────────────────
   if (tile.propertyId) {
     const property = state.properties[tile.propertyId];
     if (property && property.ownerId && property.ownerId !== playerId && !property.isMortgaged) {
@@ -52,6 +71,62 @@ export const movePlayer = (state: GameState, playerId: string, steps: number): G
     }
   }
 
+  return newState;
+};
+
+// ── Jail: Roll for freedom (doubles = escape) ────
+export const rollForJail = (state: GameState, playerId: string): GameState => {
+  const newState = { ...state, players: [...state.players] };
+  const playerIndex = newState.players.findIndex(p => p.id === playerId);
+  if (playerIndex === -1) return state;
+
+  const player = { ...newState.players[playerIndex] };
+  if (!player.isInJail) return state;
+
+  const [d1, d2] = rollDice();
+  newState.lastDiceRoll = [d1, d2];
+  player.jailTurns += 1;
+
+  if (d1 === d2) {
+    // Doubles! Player is free
+    player.isInJail = false;
+    player.jailTurns = 0;
+    newState.players[playerIndex] = player;
+    newState.eventFeed = [`${player.name} rolled doubles (${d1}-${d2}) and escaped JAIL! 🎉`, ...newState.eventFeed];
+    // Now move them by the dice total
+    return movePlayer(newState, playerId, d1 + d2);
+  }
+
+  if (player.jailTurns >= 3) {
+    // 3rd failed attempt — forced to pay ₹75 and move
+    player.money -= 75;
+    player.isInJail = false;
+    player.jailTurns = 0;
+    newState.players[playerIndex] = player;
+    newState.eventFeed = [`${player.name} failed 3 times. Paid ₹75 fine to leave JAIL 💸`, ...newState.eventFeed];
+    return movePlayer(newState, playerId, d1 + d2);
+  }
+
+  // Failed to roll doubles
+  newState.players[playerIndex] = player;
+  newState.eventFeed = [`${player.name} rolled ${d1}-${d2}. No doubles! Still in JAIL (Attempt ${player.jailTurns}/3) 🔒`, ...newState.eventFeed];
+  return newState;
+};
+
+// ── Jail: Pay fine to get out immediately ────────
+export const payJailFine = (state: GameState, playerId: string): GameState => {
+  const newState = { ...state, players: [...state.players] };
+  const playerIndex = newState.players.findIndex(p => p.id === playerId);
+  if (playerIndex === -1) return state;
+
+  const player = { ...newState.players[playerIndex] };
+  if (!player.isInJail) return state;
+
+  player.money -= 75;
+  player.isInJail = false;
+  player.jailTurns = 0;
+  newState.players[playerIndex] = player;
+  newState.eventFeed = [`${player.name} paid ₹75 fine to leave JAIL 💰`, ...newState.eventFeed];
   return newState;
 };
 
