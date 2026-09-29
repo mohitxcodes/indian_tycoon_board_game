@@ -4,6 +4,7 @@ import { BoardTile as IBoardTile, Property } from '../../types/property';
 import { Player } from '../../types/player';
 import { BoardTile } from './BoardTile';
 import { TokenOverlay } from './TokenOverlay';
+import { BoardCenterBg } from './BoardCenterBg';
 import { TILES_PER_SIDE } from '../../data/boardData';
 import { theme } from '../../constants/theme';
 
@@ -99,19 +100,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
         {/* Center area (Green field) */}
         <View style={styles.center}>
+          <BoardCenterBg width={boardSize - (cornerSize * 2)} height={boardSize - (cornerSize * 2)} />
+          
           {/* Top Left Card (Community Chest) */}
           <View style={[styles.cardPlaceholder, styles.cardCommunity]}>
             <View style={styles.cardCommunityInner}>
+              <View style={styles.bannerBlue}><Text style={styles.bannerText}>COMMUNITY CHEST</Text></View>
               <Text style={styles.cardIcon}>📦</Text>
-              <Text style={styles.cardText}>COMMUNITY{'\n'}CHEST</Text>
             </View>
           </View>
           
           {/* Bottom Right Card (Chance) */}
           <View style={[styles.cardPlaceholder, styles.cardChance]}>
             <View style={styles.cardChanceInner}>
+              <View style={styles.bannerRed}><Text style={styles.bannerText}>CHANCE</Text></View>
               <Text style={styles.cardIcon}>📢</Text>
-              <Text style={styles.cardText}>CHANCE</Text>
             </View>
           </View>
 
@@ -272,14 +275,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardIcon: {
-    fontSize: 20,
-    marginBottom: 2,
+    fontSize: 24,
+    marginTop: 8,
   },
-  cardText: {
+  bannerBlue: {
+    backgroundColor: '#1E3A8A',
+    width: '120%',
+    paddingVertical: 2,
+    alignItems: 'center',
+    transform: [{ rotate: '-15deg' }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  bannerRed: {
+    backgroundColor: '#991B1B',
+    width: '120%',
+    paddingVertical: 2,
+    alignItems: 'center',
+    transform: [{ rotate: '-15deg' }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  bannerText: {
     color: '#FFF',
     fontWeight: '900',
-    fontSize: 10,
-    textAlign: 'center',
+    fontSize: 9,
+    letterSpacing: 0.5,
   },
   tree: {
     position: 'absolute',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, useWindowDimensions, Image } from 'react-native';
+import { View, StyleSheet, Text, useWindowDimensions, Image, Pressable } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useEffect, useRef, useState } from 'react';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -20,13 +20,15 @@ const getAvatarUrl = (name: string) =>
 interface PlayerHudProps {
   players: Player[];
   currentPlayerIndex: number;
+  onPlayerPress: (player: Player) => void;
 }
 
 const PlayerCard: React.FC<{
   player: Player;
   index: number;
   isActive: boolean;
-}> = ({ player, index, isActive }) => {
+  onPress: () => void;
+}> = ({ player, index, isActive, onPress }) => {
   const style = PLAYER_STYLES[index % PLAYER_STYLES.length];
   const avatarUrl = getAvatarUrl(player.name);
 
@@ -50,7 +52,7 @@ const PlayerCard: React.FC<{
   }, [player.money]);
 
   return (
-    <View style={[
+    <Pressable onPress={onPress} style={[
       styles.card3dBase,
       { backgroundColor: isActive ? style.shadow : '#B0B0B0' }, // 3D shadow layer
       isActive && { paddingBottom: 0, marginTop: 4 }, // Press-down effect when active
@@ -93,25 +95,25 @@ const PlayerCard: React.FC<{
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 };
 
-export const PlayerHud: React.FC<PlayerHudProps> = ({ players, currentPlayerIndex }) => {
+export const PlayerHud: React.FC<PlayerHudProps> = ({ players, currentPlayerIndex, onPlayerPress }) => {
   const { width } = useWindowDimensions();
   const hudWidth = width - 16;
 
   return (
     <View style={[styles.container, { width: hudWidth }]}>
       <View style={styles.row}>
-        {players[0] && <PlayerCard player={players[0]} index={0} isActive={0 === currentPlayerIndex} />}
-        {players[1] && <PlayerCard player={players[1]} index={1} isActive={1 === currentPlayerIndex} />}
+        {players[0] && <PlayerCard player={players[0]} index={0} isActive={0 === currentPlayerIndex} onPress={() => onPlayerPress(players[0])} />}
+        {players[1] && <PlayerCard player={players[1]} index={1} isActive={1 === currentPlayerIndex} onPress={() => onPlayerPress(players[1])} />}
       </View>
 
       {(players.length > 2) && (
         <View style={styles.row}>
-          {players[2] && <PlayerCard player={players[2]} index={2} isActive={2 === currentPlayerIndex} />}
-          {players[3] && <PlayerCard player={players[3]} index={3} isActive={3 === currentPlayerIndex} />}
+          {players[2] && <PlayerCard player={players[2]} index={2} isActive={2 === currentPlayerIndex} onPress={() => onPlayerPress(players[2])} />}
+          {players[3] && <PlayerCard player={players[3]} index={3} isActive={3 === currentPlayerIndex} onPress={() => onPlayerPress(players[3])} />}
         </View>
       )}
     </View>

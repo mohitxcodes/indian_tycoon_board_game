@@ -4,6 +4,8 @@ import { mockPlayers } from '../data/playerData';
 import { mockBoard, mockProperties } from '../data/boardData';
 import { mockEventCards } from '../data/cardData';
 import * as Engine from '../game-engine/gameEngine';
+import * as PropertyEngine from '../game-engine/propertyEngine';
+import * as BuildingEngine from '../game-engine/buildingEngine';
 
 interface GameStore {
   game: GameState | null;
@@ -17,6 +19,11 @@ interface GameStore {
   rollForJail: () => void;
   payJailFine: () => void;
   sendToJail: () => void;
+  mortgageProperty: (propertyId: string) => void;
+  redeemProperty: (propertyId: string) => void;
+  buildHouse: (propertyId: string) => void;
+  buildHotel: (propertyId: string) => void;
+  sellBuilding: (propertyId: string) => void;
 }
 
 const getInitialState = (): GameState => ({
@@ -113,5 +120,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!game) return;
     const currentPlayer = game.players[game.currentPlayerIndex];
     set({ game: Engine.sendToJail(game, currentPlayer.id) });
+  },
+
+  mortgageProperty: (propertyId: string) => {
+    const { game } = get();
+    if (!game) return;
+    const currentPlayer = game.players[game.currentPlayerIndex];
+    set({ game: PropertyEngine.mortgageProperty(game, currentPlayer.id, propertyId) });
+  },
+
+  redeemProperty: (propertyId: string) => {
+    const { game } = get();
+    if (!game) return;
+    const currentPlayer = game.players[game.currentPlayerIndex];
+    set({ game: PropertyEngine.redeemProperty(game, currentPlayer.id, propertyId) });
+  },
+
+  buildHouse: (propertyId: string) => {
+    const { game } = get();
+    if (!game) return;
+    const currentPlayer = game.players[game.currentPlayerIndex];
+    set({ game: BuildingEngine.buildHouse(game, currentPlayer.id, propertyId) });
+  },
+
+  buildHotel: (propertyId: string) => {
+    const { game } = get();
+    if (!game) return;
+    const currentPlayer = game.players[game.currentPlayerIndex];
+    set({ game: BuildingEngine.buildHotel(game, currentPlayer.id, propertyId) });
+  },
+
+  sellBuilding: (propertyId: string) => {
+    const { game } = get();
+    if (!game) return;
+    const currentPlayer = game.players[game.currentPlayerIndex];
+    set({ game: BuildingEngine.sellBuilding(game, currentPlayer.id, propertyId) });
   },
 }));

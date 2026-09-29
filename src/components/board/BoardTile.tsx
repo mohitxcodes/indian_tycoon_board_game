@@ -94,14 +94,14 @@ export const BoardTile: React.FC<BoardTileProps> = ({
             transform: [{ rotate: textRotation }]
           }
         ]}>
-          <Text style={[styles.tilePrice, { fontSize: Math.max(7, Math.min(width, height) * 0.22) }]}>
-            ₹{property?.price}
-          </Text>
           <Text
             style={[styles.tileName, { fontSize: Math.max(6, Math.min(width, height) * 0.16) }]}
             numberOfLines={2}
           >
             {tile.name}
+          </Text>
+          <Text style={[styles.tilePrice, { fontSize: Math.max(7, Math.min(width, height) * 0.22) }]}>
+            ₹{property?.price}
           </Text>
         </View>
       </View>

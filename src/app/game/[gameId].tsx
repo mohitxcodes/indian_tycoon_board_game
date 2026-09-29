@@ -31,11 +31,15 @@ import { ActionBar } from '../../components/board/ActionBar';
 import { PropertyModal } from '../../components/board/PropertyModal';
 import { TileInfoModal } from '../../components/board/TileInfoModal';
 import { PaymentModal } from '../../components/board/PaymentModal';
+import { SalaryModal } from '../../components/board/SalaryModal';
 import { AuctionModal } from '../../components/board/AuctionModal';
 import { JailModal } from '../../components/board/JailModal';
+import { PropertyManagerModal, ManagerMode } from '../../components/board/PropertyManagerModal';
 import { GlobalEventPopup } from '../../components/board/GlobalEventPopup';
+import { PlayerProfileModal } from '../../components/player/PlayerProfileModal';
 import { useGameStore } from '../../store/gameStore';
 import { PaymentEvent } from '../../types/game';
+import { Player } from '../../types/player';
 import { theme } from '../../constants/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -56,6 +60,12 @@ export default function GameScreen() {
   const rollForJailAction = useGameStore((s) => s.rollForJail);
   const payJailFineAction = useGameStore((s) => s.payJailFine);
   const sendToJailAction = useGameStore((s) => s.sendToJail);
+  
+  const buildHouseAction = useGameStore((s) => s.buildHouse);
+  const buildHotelAction = useGameStore((s) => s.buildHotel);
+  const sellBuildingAction = useGameStore((s) => s.sellBuilding);
+  const mortgagePropertyAction = useGameStore((s) => s.mortgageProperty);
+  const redeemPropertyAction = useGameStore((s) => s.redeemProperty);
 
   const [isRolling, setIsRolling] = useState(false);
   const [hasRolled, setHasRolled] = useState(false);
@@ -65,8 +75,11 @@ export default function GameScreen() {
   const [declinedPropertyId, setDeclinedPropertyId] = useState<string | null>(null);
   const [inspectedPropertyId, setInspectedPropertyId] = useState<string | null>(null);
   const [activePayment, setActivePayment] = useState<PaymentEvent | null>(null);
+  const [activeSalary, setActiveSalary] = useState<{ playerId: string; amount: number; timestamp: number } | null>(null);
   const [showJailModal, setShowJailModal] = useState(false);
   const [jailActionTaken, setJailActionTaken] = useState(false);
+  const [viewingPlayerProfile, setViewingPlayerProfile] = useState<Player | null>(null);
+  const [managerMode, setManagerMode] = useState<ManagerMode | null>(null);
 
   // Dice glow animation
   const diceGlow = useSharedValue(0);
@@ -84,6 +97,13 @@ export default function GameScreen() {
       setActivePayment(game.lastPayment);
     }
   }, [game?.lastPayment]);
+
+  // Show salary modal when passing GO
+  useEffect(() => {
+    if (game?.lastSalaryEvent) {
+      setActiveSalary(game.lastSalaryEvent);
+    }
+  }, [game?.lastSalaryEvent]);
 
   // Two-phase Go-to-Jail: after landing on position 30, slide back to jail
   useEffect(() => {
@@ -189,7 +209,14 @@ export default function GameScreen() {
       {/* ── Player HUD (top) ─────────────────────── */}
       <Animated.View entering={FadeInDown.delay(200).duration(400)}>
         <View style={styles.topSafeArea} />
-        <PlayerHud players={game.players} currentPlayerIndex={game.currentPlayerIndex} />
+        <PlayerHud 
+          players={game.players} 
+          currentPlayerIndex={game.currentPlayerIndex} 
+          onPlayerPress={(player) => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setViewingPlayerProfile(player);
+          }}
+        />
         
         {/* Top Event Feed Log */}
         {game.eventFeed.length > 0 && (
@@ -228,11 +255,11 @@ export default function GameScreen() {
       <Animated.View entering={FadeIn.delay(400).duration(400)}>
         <ActionBar
           onMenu={() => router.back()}
-          onBuild={() => {}}
-          onSell={() => {}}
-          onTrade={() => {}}
-          onMortgage={() => {}}
-          onRedeem={() => {}}
+          onBuild={() => setManagerMode('BUILD')}
+          onSell={() => setManagerMode('SELL')}
+          onTrade={() => {}} // Trade not yet implemented
+          onMortgage={() => setManagerMode('MORTGAGE')}
+          onRedeem={() => setManagerMode('REDEEM')}
         />
       </Animated.View>
 
@@ -390,6 +417,15 @@ export default function GameScreen() {
         />
       )}
 
+      {/* ── Salary Modal ── */}
+      {activeSalary && (
+        <SalaryModal
+          player={game.players.find(p => p.id === activeSalary.playerId)!}
+          amount={activeSalary.amount}
+          onComplete={() => setActiveSalary(null)}
+        />
+      )}
+
       {/* ── Jail Modal ── */}
       {shouldShowJailModal && (
         <JailModal
@@ -408,6 +444,45 @@ export default function GameScreen() {
             // Player paid fine, they're free but haven't rolled yet for movement
             // They can now roll the dice normally
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }}
+        />
+      )}
+
+      {/* ── Player Profile Modal ── */}
+      {viewingPlayerProfile && (
+        <PlayerProfileModal
+          player={viewingPlayerProfile}
+          properties={game.properties}
+          onClose={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setViewingPlayerProfile(null);
+          }}
+        />
+      )}
+
+      {/* ── Property Manager Modal ── */}
+      {managerMode && (
+        <PropertyManagerModal
+          game={game}
+          player={currentPlayer}
+          properties={game.properties}
+          initialMode={managerMode}
+          onClose={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setManagerMode(null);
+          }}
+          onAction={(mode, propertyId) => {
+            const property = game.properties[propertyId];
+            if (mode === 'BUILD') {
+              if (property.level === 4) buildHotelAction(propertyId);
+              else buildHouseAction(propertyId);
+            } else if (mode === 'SELL') {
+              sellBuildingAction(propertyId);
+            } else if (mode === 'MORTGAGE') {
+              mortgagePropertyAction(propertyId);
+            } else if (mode === 'REDEEM') {
+              redeemPropertyAction(propertyId);
+            }
           }}
         />
       )}

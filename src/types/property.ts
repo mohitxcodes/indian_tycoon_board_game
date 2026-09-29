@@ -1,4 +1,4 @@
-export type PropertyLevel = 0 | 1 | 2 | 3;
+export type PropertyLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
 export interface Property {
   id: string;

@@ -19,8 +19,13 @@ export const movePlayer = (state: GameState, playerId: string, steps: number): G
   
   // Pass Go
   if (player.position < previousPosition) {
-    player.money += 2000;
-    newState.eventFeed = [`${player.name} passed GO and collected ₹2000`, ...newState.eventFeed];
+    player.money += 200;
+    newState.eventFeed = [`${player.name} passed GO and collected ₹200`, ...newState.eventFeed];
+    newState.lastSalaryEvent = {
+      playerId: player.id,
+      amount: 200,
+      timestamp: Date.now(),
+    };
   }
 
   newState.players[playerIndex] = player;
@@ -51,8 +56,22 @@ export const movePlayer = (state: GameState, playerId: string, steps: number): G
       const ownerIndex = newState.players.findIndex(p => p.id === property.ownerId);
       if (ownerIndex !== -1) {
         const owner = { ...newState.players[ownerIndex] };
-        
-        const rent = property.baseRent * (property.level > 0 ? Math.pow(2, property.level) : 1);
+        let rent = 0;
+
+        if (property.group === 'Station') {
+          const ownedStations = Object.values(state.properties).filter(
+            p => p.group === 'Station' && p.ownerId === owner.id
+          ).length;
+          rent = 25 * Math.pow(2, Math.max(0, ownedStations - 1));
+        } else if (property.group === 'Utility') {
+          const ownedUtilities = Object.values(state.properties).filter(
+            p => p.group === 'Utility' && p.ownerId === owner.id
+          ).length;
+          const multiplier = ownedUtilities === 2 ? 10 : 4;
+          rent = steps * multiplier;
+        } else {
+          rent = property.baseRent * (property.level > 0 ? Math.pow(2, property.level) : 1);
+        }
         
         player.money -= rent;
         owner.money += rent;
