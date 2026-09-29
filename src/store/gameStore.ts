@@ -8,7 +8,7 @@ import * as Engine from '../game-engine/gameEngine';
 interface GameStore {
   game: GameState | null;
   initGame: () => void;
-  rollDice: () => void;
+  rollDice: (forcedSteps?: number) => void;
   buyProperty: (propertyId: string) => void;
   endTurn: () => void;
   startAuction: (propertyId: string) => void;
@@ -34,12 +34,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   initGame: () => set({ game: getInitialState() }),
 
-  rollDice: () => {
+  rollDice: (forcedSteps?: number) => {
     const { game } = get();
     if (!game) return;
 
-    const [dice1, dice2] = Engine.rollDice();
-    const totalSteps = dice1 + dice2;
+    let dice1, dice2, totalSteps;
+    if (forcedSteps !== undefined) {
+      dice1 = Math.min(6, Math.max(1, Math.floor(forcedSteps / 2)));
+      dice2 = forcedSteps - dice1;
+      totalSteps = forcedSteps;
+    } else {
+      [dice1, dice2] = Engine.rollDice();
+      totalSteps = dice1 + dice2;
+    }
     const currentPlayer = game.players[game.currentPlayerIndex];
 
     let newState: GameState = { ...game, lastDiceRoll: [dice1, dice2] as [number, number] };

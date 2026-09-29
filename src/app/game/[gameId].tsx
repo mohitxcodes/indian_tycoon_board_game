@@ -6,6 +6,8 @@ import {
   Pressable,
   StatusBar,
   useWindowDimensions,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, {
@@ -53,6 +55,8 @@ export default function GameScreen() {
   const [isRolling, setIsRolling] = useState(false);
   const [hasRolled, setHasRolled] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showTestPrompt, setShowTestPrompt] = useState(false);
+  const [testSteps, setTestSteps] = useState('');
   const [declinedPropertyId, setDeclinedPropertyId] = useState<string | null>(null);
   const [inspectedPropertyId, setInspectedPropertyId] = useState<string | null>(null);
   const [activePayment, setActivePayment] = useState<PaymentEvent | null>(null);
@@ -97,8 +101,7 @@ export default function GameScreen() {
     transform: [{ scale: rollBtnScale.value }],
   }));
 
-  const handleRollDice = useCallback(() => {
-    if (isRolling || hasRolled) return;
+  const executeRoll = useCallback((forcedSteps?: number) => {
     setIsRolling(true);
     setIsAnimating(true); // Start animation lock
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -106,10 +109,17 @@ export default function GameScreen() {
     setTimeout(() => {
       setIsRolling(false);
       setHasRolled(true);
-      rollDiceAction();
+      rollDiceAction(forcedSteps);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }, 900);
-  }, [isRolling, hasRolled, rollDiceAction]);
+  }, [rollDiceAction]);
+
+  const handleRollDice = useCallback(() => {
+    if (isRolling || hasRolled) return;
+    
+    // For testing only
+    setShowTestPrompt(true);
+  }, [isRolling, hasRolled]);
 
   const handleAnimationComplete = useCallback(() => {
     setIsAnimating(false);
@@ -247,6 +257,51 @@ export default function GameScreen() {
         </View>
 
       </Animated.View>
+
+      {/* ── Test Dice Modal ────────────────────── */}
+      <Modal
+        visible={showTestPrompt}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.testModalOverlay}>
+          <View style={styles.testModalContent}>
+            <Text style={styles.testModalTitle}>Test Mode (Dice Roll)</Text>
+            <Text style={styles.testModalSubtitle}>Enter steps to move or leave empty for random roll:</Text>
+            <TextInput
+              style={styles.testModalInput}
+              keyboardType="number-pad"
+              value={testSteps}
+              onChangeText={setTestSteps}
+              placeholder="e.g. 4"
+              placeholderTextColor="#999"
+              autoFocus
+            />
+            <View style={styles.testModalButtons}>
+              <Pressable
+                style={[styles.testModalButton, styles.testModalButtonCancel]}
+                onPress={() => {
+                  setShowTestPrompt(false);
+                  setTestSteps('');
+                }}
+              >
+                <Text style={styles.testModalButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.testModalButton, styles.testModalButtonConfirm]}
+                onPress={() => {
+                  setShowTestPrompt(false);
+                  const steps = parseInt(testSteps, 10);
+                  executeRoll(isNaN(steps) ? undefined : steps);
+                  setTestSteps('');
+                }}
+              >
+                <Text style={styles.testModalButtonText}>Roll</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── Overlay Modals ──────────────────────── */}
       {showPropertyModal && currentProperty && (
@@ -447,5 +502,66 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     fontWeight: '600',
     textAlign: 'center',
+  },
+  testModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  testModalContent: {
+    backgroundColor: '#1A2942',
+    padding: 24,
+    borderRadius: 16,
+    width: '80%',
+    maxWidth: 340,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  testModalTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  testModalSubtitle: {
+    color: '#A0B4D0',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  testModalInput: {
+    backgroundColor: '#0A1628',
+    color: '#FFF',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  testModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  testModalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  testModalButtonCancel: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  testModalButtonConfirm: {
+    backgroundColor: '#4A90E2',
+  },
+  testModalButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
