@@ -19,6 +19,17 @@ export interface AuctionState {
   turnIndex: number; // Index within activeBidders
 }
 
+export interface TradeOffer {
+  fromId: string;
+  toId: string;
+  offerProperties: string[];
+  offerMoney: number;
+  offerJailCards: number;
+  requestProperties: string[];
+  requestMoney: number;
+  requestJailCards: number;
+}
+
 export interface GameState {
   id: string;
   status: GameStatus;
@@ -35,5 +46,6 @@ export interface GameState {
   lastPayment?: PaymentEvent;
   lastSalaryEvent?: { playerId: string; amount: number; timestamp: number };
   auction?: AuctionState;
+  pendingTrade?: TradeOffer;
   pendingJail?: boolean; // True when player landed on "Go to Jail" but hasn't been moved to jail yet
 }

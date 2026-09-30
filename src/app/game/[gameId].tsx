@@ -35,6 +35,8 @@ import { SalaryModal } from '../../components/board/SalaryModal';
 import { AuctionModal } from '../../components/board/AuctionModal';
 import { JailModal } from '../../components/board/JailModal';
 import { PropertyManagerModal, ManagerMode } from '../../components/board/PropertyManagerModal';
+import { TradeModal } from '../../components/board/TradeModal';
+import { TradeReviewModal } from '../../components/board/TradeReviewModal';
 import { GlobalEventPopup } from '../../components/board/GlobalEventPopup';
 import { PlayerProfileModal } from '../../components/player/PlayerProfileModal';
 import { useGameStore } from '../../store/gameStore';
@@ -66,6 +68,10 @@ export default function GameScreen() {
   const sellBuildingAction = useGameStore((s) => s.sellBuilding);
   const mortgagePropertyAction = useGameStore((s) => s.mortgageProperty);
   const redeemPropertyAction = useGameStore((s) => s.redeemProperty);
+  
+  const proposeTradeAction = useGameStore((s) => s.proposeTrade);
+  const acceptTradeAction = useGameStore((s) => s.acceptTrade);
+  const rejectTradeAction = useGameStore((s) => s.rejectTrade);
 
   const [isRolling, setIsRolling] = useState(false);
   const [hasRolled, setHasRolled] = useState(false);
@@ -80,6 +86,7 @@ export default function GameScreen() {
   const [jailActionTaken, setJailActionTaken] = useState(false);
   const [viewingPlayerProfile, setViewingPlayerProfile] = useState<Player | null>(null);
   const [managerMode, setManagerMode] = useState<ManagerMode | null>(null);
+  const [showTradeModal, setShowTradeModal] = useState(false);
 
   // Dice glow animation
   const diceGlow = useSharedValue(0);
@@ -256,10 +263,8 @@ export default function GameScreen() {
         <ActionBar
           onMenu={() => router.back()}
           onBuild={() => setManagerMode('BUILD')}
-          onSell={() => setManagerMode('SELL')}
-          onTrade={() => {}} // Trade not yet implemented
+          onTrade={() => setShowTradeModal(true)}
           onMortgage={() => setManagerMode('MORTGAGE')}
-          onRedeem={() => setManagerMode('REDEEM')}
         />
       </Animated.View>
 
@@ -467,6 +472,7 @@ export default function GameScreen() {
           player={currentPlayer}
           properties={game.properties}
           initialMode={managerMode}
+          allowedTabs={managerMode === 'BUILD' || managerMode === 'SELL' ? ['BUILD', 'SELL'] : ['MORTGAGE', 'REDEEM']}
           onClose={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setManagerMode(null);
@@ -484,6 +490,41 @@ export default function GameScreen() {
               redeemPropertyAction(propertyId);
             }
           }}
+        />
+      )}
+
+      {/* ── Trade Modal (Propose) ── */}
+      {showTradeModal && !game.pendingTrade && (
+        <TradeModal
+          game={game}
+          currentPlayer={currentPlayer}
+          onClose={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setShowTradeModal(false);
+          }}
+          onPropose={(toId, offerProperties, offerMoney, offerJailCards, requestProperties, requestMoney, requestJailCards) => {
+            proposeTradeAction({
+              fromId: currentPlayer.id,
+              toId,
+              offerProperties,
+              offerMoney,
+              offerJailCards,
+              requestProperties,
+              requestMoney,
+              requestJailCards
+            });
+            setShowTradeModal(false);
+          }}
+        />
+      )}
+
+      {/* ── Trade Review Modal (Accept/Reject) ── */}
+      {game.pendingTrade && (
+        <TradeReviewModal
+          game={game}
+          trade={game.pendingTrade}
+          onAccept={() => acceptTradeAction()}
+          onReject={() => rejectTradeAction()}
         />
       )}
     </View>

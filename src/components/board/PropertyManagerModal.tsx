@@ -16,6 +16,7 @@ interface PropertyManagerModalProps {
   player: Player;
   properties: Record<string, Property>;
   initialMode: ManagerMode;
+  allowedTabs: ManagerMode[];
   onClose: () => void;
   onAction: (mode: ManagerMode, propertyId: string) => void;
 }
@@ -25,6 +26,7 @@ export const PropertyManagerModal: React.FC<PropertyManagerModalProps> = ({
   player,
   properties,
   initialMode,
+  allowedTabs,
   onClose,
   onAction,
 }) => {
@@ -47,14 +49,39 @@ export const PropertyManagerModal: React.FC<PropertyManagerModalProps> = ({
     });
   }, [myProperties, mode, game, player.id]);
 
-  const tabs: ManagerMode[] = ['BUILD', 'SELL', 'MORTGAGE', 'REDEEM'];
+  const modalTitle = allowedTabs.includes('BUILD') ? 'CONSTRUCTION' : 'FINANCE';
+
+  const renderBuildings = (level: number) => {
+    if (level === 5) return '🏨';
+    return Array(level).fill('🏠').join('');
+  };
+
+  const getActionText = (mode: ManagerMode, property: Property) => {
+    if (mode === 'BUILD') {
+      const isHotel = property.level === 4;
+      return `${isHotel ? 'Build Hotel' : 'Build House'} (₹${property.upgradeCost})`;
+    }
+    if (mode === 'SELL') {
+      const isHotel = property.level === 5;
+      return `Sell ${isHotel ? 'Hotel' : 'House'} (₹${property.upgradeCost / 2})`;
+    }
+    if (mode === 'MORTGAGE') {
+      return `Mortgage (₹${property.price / 2})`;
+    }
+    if (mode === 'REDEEM') {
+      const mortgageValue = property.price / 2;
+      const redemptionCost = mortgageValue + Math.ceil(mortgageValue * 0.10);
+      return `Redeem (₹${redemptionCost})`;
+    }
+    return mode;
+  };
 
   return (
     <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={styles.overlay}>
       <Animated.View entering={SlideInUp.duration(300)} exiting={SlideOutDown.duration(200)} style={[styles.modalBase, { width: width * 0.9, maxHeight: height * 0.85 }]}>
         <View style={styles.modalWrapper}>
           <View style={styles.modalHeader}>
-            <Text style={styles.headerTitle}>PROPERTY MANAGER</Text>
+            <Text style={styles.headerTitle}>{modalTitle}</Text>
             <Pressable onPress={onClose} style={styles.closeBtn}>
               <FontAwesome5 name="times" size={24} color="#FFF" />
             </Pressable>
@@ -62,7 +89,7 @@ export const PropertyManagerModal: React.FC<PropertyManagerModalProps> = ({
 
           <View style={styles.innerContent}>
             <View style={styles.tabsContainer}>
-              {tabs.map((tab) => (
+              {allowedTabs.map((tab) => (
                 <Pressable
                   key={tab}
                   onPress={() => {
@@ -84,7 +111,7 @@ export const PropertyManagerModal: React.FC<PropertyManagerModalProps> = ({
                   <View key={property.id} style={styles.propertyCard}>
                     <View style={styles.propertyInfo}>
                       <Text style={styles.propertyName}>{property.name}</Text>
-                      {property.level > 0 && <Text style={styles.propertyLevel}>Level {property.level}</Text>}
+                      {property.level > 0 && <Text style={styles.propertyLevel}>{renderBuildings(property.level)}</Text>}
                       {property.isMortgaged && <Text style={styles.propertyMortgaged}>(Mortgaged)</Text>}
                     </View>
                     <Pressable
@@ -95,7 +122,7 @@ export const PropertyManagerModal: React.FC<PropertyManagerModalProps> = ({
                       }}
                     >
                       <Text style={styles.actionBtnText}>
-                        {mode === 'BUILD' ? (property.level === 4 ? 'Build Hotel' : 'Build House') : mode}
+                        {getActionText(mode, property)}
                       </Text>
                     </Pressable>
                   </View>
@@ -250,7 +277,7 @@ const styles = StyleSheet.create({
   actionBtnText: {
     color: '#FFF',
     fontWeight: '900',
-    fontSize: 11,
+    fontSize: 10,
     textTransform: 'uppercase',
   },
 });

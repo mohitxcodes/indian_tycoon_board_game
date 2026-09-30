@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { GameState } from '../types/game';
+import { GameState, TradeOffer } from '../types/game';
 import { mockPlayers } from '../data/playerData';
 import { mockBoard, mockProperties } from '../data/boardData';
 import { mockEventCards } from '../data/cardData';
 import * as Engine from '../game-engine/gameEngine';
 import * as PropertyEngine from '../game-engine/propertyEngine';
 import * as BuildingEngine from '../game-engine/buildingEngine';
+import * as TradeEngine from '../game-engine/tradeEngine';
 
 interface GameStore {
   game: GameState | null;
@@ -24,6 +25,9 @@ interface GameStore {
   buildHouse: (propertyId: string) => void;
   buildHotel: (propertyId: string) => void;
   sellBuilding: (propertyId: string) => void;
+  proposeTrade: (offer: TradeOffer) => void;
+  acceptTrade: () => void;
+  rejectTrade: () => void;
 }
 
 const getInitialState = (): GameState => ({
@@ -155,5 +159,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!game) return;
     const currentPlayer = game.players[game.currentPlayerIndex];
     set({ game: BuildingEngine.sellBuilding(game, currentPlayer.id, propertyId) });
+  },
+  proposeTrade: (offer) => {
+    const { game } = get();
+    if (!game) return;
+    set({ game: TradeEngine.proposeTrade(game, offer) });
+  },
+  acceptTrade: () => {
+    const { game } = get();
+    if (!game) return;
+    set({ game: TradeEngine.acceptTrade(game) });
+  },
+  rejectTrade: () => {
+    const { game } = get();
+    if (!game) return;
+    set({ game: TradeEngine.rejectTrade(game) });
   },
 }));

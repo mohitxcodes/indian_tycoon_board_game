@@ -62,9 +62,26 @@ export const BoardTile: React.FC<BoardTileProps> = ({
             stripPosition === 'bottom' && { bottom: 0, left: 0, right: 0, height: height * 0.25 },
             stripPosition === 'left' && { left: 0, top: 0, bottom: 0, width: width * 0.25 },
             stripPosition === 'right' && { right: 0, top: 0, bottom: 0, width: width * 0.25 },
-            { backgroundColor: groupColor },
+            { backgroundColor: groupColor, justifyContent: 'center', alignItems: 'center' },
           ]}
-        />
+        >
+          {property && property.level > 0 && (
+            <View style={[
+              styles.buildingsContainer,
+              isTopBottom && { transform: [{ rotate: textRotation }] }
+            ]}>
+              {property.level === 5 ? (
+                <Text style={[styles.buildingIcon, { fontSize: Math.max(8, height * 0.15) }]}>🏨</Text>
+              ) : (
+                <View style={{ flexDirection: 'row', gap: 1 }}>
+                  {Array.from({ length: property.level }).map((_, i) => (
+                    <Text key={i} style={[styles.buildingIcon, { fontSize: Math.max(6, height * 0.12) }]}>🏠</Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
       )}
       {/* Owner strip */}
       {ownerColor && (
@@ -247,4 +264,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 2,
   },
+  buildingsContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buildingIcon: {
+    textAlign: 'center',
+  }
 });

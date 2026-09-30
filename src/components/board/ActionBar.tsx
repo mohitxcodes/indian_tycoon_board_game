@@ -9,10 +9,8 @@ import * as Haptics from 'expo-haptics';
 
 interface ActionBarProps {
   onBuild: () => void;
-  onSell: () => void;
   onTrade: () => void;
   onMortgage: () => void;
-  onRedeem: () => void;
   onMenu: () => void;
 }
 
@@ -63,15 +61,13 @@ const ActionButton: React.FC<{
 
 export const ActionBar: React.FC<ActionBarProps> = ({
   onBuild,
-  onSell,
   onTrade,
   onMortgage,
-  onRedeem,
   onMenu,
 }) => {
   const { width } = useWindowDimensions();
-  // 6 buttons, gap of 4, padding 8 on each side
-  const btnWidth = (width - 16 - (5 * 4)) / 6;
+  // 4 buttons, gap of 4, padding 8 on each side
+  const btnWidth = (width - 16 - (3 * 4)) / 4;
 
   return (
     <View style={styles.container}>
@@ -82,13 +78,7 @@ export const ActionBar: React.FC<ActionBarProps> = ({
         <ActionButton label="BUILD" color="#10B981" shadowColor="#047857" onPress={onBuild} />
       </View>
       <View style={{ width: btnWidth }}>
-        <ActionButton label="SELL" color="#10B981" shadowColor="#047857" onPress={onSell} />
-      </View>
-      <View style={{ width: btnWidth }}>
         <ActionButton label="MORTGAGE" color="#10B981" shadowColor="#047857" onPress={onMortgage} />
-      </View>
-      <View style={{ width: btnWidth }}>
-        <ActionButton label="REDEEM" color="#10B981" shadowColor="#047857" onPress={onRedeem} />
       </View>
       <View style={{ width: btnWidth }}>
         <ActionButton label="TRADE" color="#EF4444" shadowColor="#B91C1C" onPress={onTrade} />
